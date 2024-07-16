@@ -97,10 +97,10 @@ def trainer_synapse(args, model, snapshot_path):
                 loss_ce = ce_loss(outputs, label_batch)
                 loss_dice = dice_loss(outputs, label_batch.squeeze(1), softmax=True)
                 loss = 0.5 * loss_ce + 0.5 * loss_dice
-                val_loss += loss
+                val_loss += loss.item()
         val_loss /= len(valloader)
         train_loss /= len(trainloader)
-        logging.info(f'epoch {epoch_num} completed with {val_loss=}, {train_loss}')
+        logging.info(f'epoch {epoch_num} completed with {val_loss=}, {train_loss=}')
 
         save_interval = 50  # int(max_epoch/6)
         if epoch_num > int(max_epoch / 2) and (epoch_num + 1) % save_interval == 0:
