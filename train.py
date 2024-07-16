@@ -11,7 +11,7 @@ from trainer import trainer_synapse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--root_path', type=str,
-                    default='../data/train', help='root dir for data')
+                    default='./data/train', help='root dir for data')
 parser.add_argument('--num_classes', type=int,
                     default=1, help='output channel of network')
 parser.add_argument('--max_epochs', type=int,
@@ -34,7 +34,7 @@ parser.add_argument('--vit_name', type=str,
 parser.add_argument('--pretrained_path', type=str,
                     default='R50+ViT-B_16.npz', help='pretrained_path')
 parser.add_argument('--snapshot_path', type=str,
-                    default='../model/experiment/', help='snapshot_path')
+                    default='./model/experiment/', help='snapshot_path')
 parser.add_argument('--vit_patches_size', type=int,
                     default=16, help='vit_patches_size, default is 16')
 parser.add_argument('--is_pretrain', type=bool,
