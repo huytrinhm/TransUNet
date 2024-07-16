@@ -29,13 +29,16 @@ def trainer_synapse(args, model, snapshot_path):
     # db_train = Synapse_dataset(base_dir=args.root_path, list_dir=args.list_dir, split="train",
     #                            transform=transforms.Compose(
     #                                [RandomGenerator(output_size=[args.img_size, args.img_size])]))
-    db_train = KPIsDataset(root_dir=args.root_path)
+    db_train = KPIsDataset(root_dir=args.root_path, split='train')
+    db_val = KPIsDataset(root_dir=args.root_path, split='validation')
     print("The length of train set is: {}".format(len(db_train)))
 
     def worker_init_fn(worker_id):
         random.seed(args.seed + worker_id)
 
     trainloader = DataLoader(db_train, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True,
+                             worker_init_fn=worker_init_fn)
+    valloader = DataLoader(db_val, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True,
                              worker_init_fn=worker_init_fn)
     if args.n_gpu > 1:
         model = nn.DataParallel(model)
@@ -51,6 +54,8 @@ def trainer_synapse(args, model, snapshot_path):
     best_performance = 0.0
     iterator = tqdm(range(max_epoch), ncols=70)
     for epoch_num in iterator:
+        model.train()
+        train_loss = 0.
         for i_batch, sampled_batch in enumerate(trainloader):
             image_batch, label_batch = sampled_batch['image'], sampled_batch['label']
             image_batch, label_batch = image_batch.cuda(), label_batch.cuda()
@@ -58,6 +63,7 @@ def trainer_synapse(args, model, snapshot_path):
             loss_ce = ce_loss(outputs, label_batch)
             loss_dice = dice_loss(outputs, label_batch.squeeze(1), softmax=True)
             loss = 0.5 * loss_ce + 0.5 * loss_dice
+            train_loss += loss.item()
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -80,6 +86,21 @@ def trainer_synapse(args, model, snapshot_path):
                 writer.add_image('train/Prediction', outputs[1, ...] * 50, iter_num)
                 labs = label_batch[1, ...] * 50
                 writer.add_image('train/GroundTruth', labs, iter_num)
+
+        with torch.no_grad():
+            model.eval()
+            val_loss = 0.
+            for i_batch, sampled_batch in enumerate(valloader):
+                image_batch, label_batch = sampled_batch['image'], sampled_batch['label']
+                image_batch, label_batch = image_batch.cuda(), label_batch.cuda()
+                outputs = model(image_batch)
+                loss_ce = ce_loss(outputs, label_batch)
+                loss_dice = dice_loss(outputs, label_batch.squeeze(1), softmax=True)
+                loss = 0.5 * loss_ce + 0.5 * loss_dice
+                val_loss += loss
+        val_loss /= len(valloader)
+        train_loss /= len(trainloader)
+        logging.info(f'epoch {epoch_num} completed with {val_loss=}, {train_loss}')
 
         save_interval = 50  # int(max_epoch/6)
         if epoch_num > int(max_epoch / 2) and (epoch_num + 1) % save_interval == 0:

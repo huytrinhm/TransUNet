@@ -47,12 +47,12 @@ class RandomGenerator(object):
 
 
 class KPIsDataset(Dataset):
-    def __init__(self, root_dir, image_transform=None, mask_transform=None):
+    def __init__(self, root_dir, split='train', image_transform=None, mask_transform=None):
         self.image_transform = image_transform
         self.mask_transform = mask_transform
 
-        image_directory_path = os.path.join(root_dir, 'img')
-        mask_directory_path = os.path.join(root_dir, 'mask')
+        image_directory_path = os.path.join(root_dir, split, 'img')
+        mask_directory_path = os.path.join(root_dir, split, 'mask')
 
         image_filenames = [filename for filename in os.listdir(image_directory_path) if filename.endswith('.pt')]
         mask_filenames = [filename for filename in os.listdir(mask_directory_path) if filename.endswith('.pt')]
