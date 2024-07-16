@@ -58,7 +58,7 @@ if __name__ == "__main__":
     if not os.path.exists(snapshot_path):
         os.makedirs(snapshot_path)
 
-    config_vit = CONFIGS_ViT_seg[args.vit_name]g
+    config_vit = CONFIGS_ViT_seg[args.vit_name]
     config_vit.n_classes = args.num_classes
     config_vit.n_skip = args.n_skip
     if args.vit_name.find('R50') != -1:
