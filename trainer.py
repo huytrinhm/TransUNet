@@ -52,6 +52,8 @@ def trainer_synapse(args, model, snapshot_path):
     max_iterations = args.max_epochs * len(trainloader)  # max_epoch = max_iterations // len(trainloader) + 1
     logging.info("{} iterations per epoch. {} max iterations ".format(len(trainloader), max_iterations))
     best_performance = 0.0
+    best_loss = float('inf')
+
     iterator = tqdm(range(max_epoch), ncols=70)
     for epoch_num in iterator:
         model.train()
@@ -100,6 +102,14 @@ def trainer_synapse(args, model, snapshot_path):
                 val_loss += loss.item()
         val_loss /= len(valloader)
         train_loss /= len(trainloader)
+
+        if val_loss < best_loss:
+            best_loss = val_loss
+            torch.save(model.state_dict(), os.path.join(snapshot_path, 'best.pth'))
+
+        torch.save(model.state_dict(), os.path.join(snapshot_path, 'latest.pth'))
+
+
         logging.info(f'epoch {epoch_num} completed with {val_loss=}, {train_loss=}')
 
         save_interval = 50  # int(max_epoch/6)
