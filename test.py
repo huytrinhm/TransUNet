@@ -8,6 +8,7 @@ import torch.backends.cudnn as cudnn
 from networks.vit_seg_modeling import VisionTransformer as ViT_seg
 from networks.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
 from datasets.dataset_kpi import KPIsTestDataset
+from torch.utils.data import DataLoader
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--root_path', type=str,
@@ -39,18 +40,20 @@ parser.add_argument('--metric_only', type=bool,
 args = parser.parse_args()
 
 
-def inference(args, net):
-    db_test = KPIsDataset(root_dir=args.root_path)
+def inference(args, model):
+    db_test = KPIsTestDataset(root_dir=args.root_path)
     print("The length of test set is: {}".format(len(db_test)))
     testloader = DataLoader(db_test, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True)
     model.eval()
     count = 0
+    os.makedirs(args.save_path, exist_ok=True)
     for sample in testloader:
         batch_imgs, batch_names = sample['image'], sample['case_name']
         batch_imgs = batch_imgs.cuda()
-        outputs = net(batch_imgs)
+        outputs = model(batch_imgs)
         for name, im in zip(batch_names, outputs):
-            torch.save(im, os.path.join(args.save_path, name + '.pth'))
+            save_name = os.path.join(args.save_path, name.split('/')[-1]) + '.pt'
+            torch.save(im, save_name)
             count += 1
             print(f'infered {count} out of {len(db_test)} samples')
 

@@ -84,7 +84,7 @@ class KPIsTestDataset(Dataset):
 
         image_filenames = [filename for filename in os.listdir(root_dir) if filename.endswith('.pt')]
 
-        self.image_paths = [os.path.join(image_directory_path, filename) for filename in image_filenames]
+        self.image_paths = [os.path.join(root_dir, filename) for filename in image_filenames]
 
     def __len__(self):
         return len(self.image_paths)
